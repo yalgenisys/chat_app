@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:chat_app/widgets/auth_form.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,8 +23,9 @@ class _AuthScreenState extends State<AuthScreen> {
     String email,
     String username,
     String password,
+    File image,
     bool isLogin,
-      BuildContext ctx,
+    BuildContext ctx,
   ) async {
     UserCredential userCredential;
     try {
@@ -36,16 +40,26 @@ class _AuthScreenState extends State<AuthScreen> {
           email: email,
           password: password,
         );
+
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('user_image')
+            .child(userCredential.user!.uid + '.jpg');
+        await ref.putFile(image);
+        final url =await ref.getDownloadURL();
         await FirebaseFirestore.instance
             .collection('users')
             .doc(userCredential.user!.uid)
             .set({
-          'username': username,
+          'userName': username,
           'email': email,
+          'imageUrl': url,
         });
       }
     } on PlatformException catch (error) {
-      var message = 'An error occurred, please check your credentials';
+      print(error);
+      String message = 'An error occurred, please check your credentials';
+      print(message);
       if (error.message != null) {
         message = error.message!;
       }
@@ -62,7 +76,6 @@ class _AuthScreenState extends State<AuthScreen> {
       setState(() {
         _isLoading = false;
       });
-      print(err);
     }
   }
 
@@ -70,7 +83,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      body: AuthForm(submitFn: _submitAuthForm,isLoading: _isLoading),
+      body: AuthForm(submitFn: _submitAuthForm, isLoading: _isLoading),
     );
   }
 }

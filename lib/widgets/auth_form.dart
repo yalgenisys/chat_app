@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:chat_app/widgets/pickers/user_image_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -5,7 +8,13 @@ class AuthForm extends StatefulWidget {
   const AuthForm({Key? key, this.submitFn, this.isLoading}) : super(key: key);
   final bool? isLoading;
   final void Function(
-      String email, String username, String password, bool isLogin,BuildContext context)? submitFn;
+    String email,
+    String username,
+    String password,
+    File image,
+    bool isLogin,
+    BuildContext context,
+  )? submitFn;
 
   @override
   State<AuthForm> createState() => _AuthFormState();
@@ -17,16 +26,32 @@ class _AuthFormState extends State<AuthForm> {
   var _userEmail = '';
   var _userName = '';
   var _userPassword = '';
+  File? _userImageFile;
+
+  void _pickedImage(File image) {
+    _userImageFile = image;
+  }
 
   void _submitForm() {
     final isValid = _key.currentState!.validate();
     FocusScope.of(context).unfocus();
+    if (_userImageFile == null && !_isLogin) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please pick an image'),
+          backgroundColor: Theme.of(context).errorColor,
+        ),
+      );
+      return;
+    }
+
     if (isValid) {
       _key.currentState!.save();
       widget.submitFn!(
         _userEmail,
         _userName,
         _userPassword,
+        _userImageFile!,
         _isLogin,
         context,
       );
@@ -46,6 +71,7 @@ class _AuthFormState extends State<AuthForm> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (!_isLogin) UserImagePicker(imagePickFn: _pickedImage),
                   TextFormField(
                     key: const ValueKey('email'),
                     validator: (value) {
@@ -95,25 +121,26 @@ class _AuthFormState extends State<AuthForm> {
                   const SizedBox(
                     height: 12,
                   ),
-                  if(widget.isLoading!)
-                    const CircularProgressIndicator(),
-                  if(!widget.isLoading!)
-                  ElevatedButton(
-                    onPressed: _submitForm,
-                    child:
-                        _isLogin ? const Text('Login') : const Text('Sign Up'),
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
-                        Colors.grey,
-                      ),
-                      elevation: MaterialStateProperty.all(0),
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                  if (widget.isLoading!) const CircularProgressIndicator(),
+                  if (!widget.isLoading!)
+                    ElevatedButton(
+                      onPressed: _submitForm,
+                      child: _isLogin
+                          ? const Text('Login')
+                          : const Text('Sign Up'),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all<Color>(
+                          Colors.grey,
+                        ),
+                        elevation: MaterialStateProperty.all(0),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   TextButton(
                     onPressed: () {
                       setState(() {

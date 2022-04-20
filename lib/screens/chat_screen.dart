@@ -1,3 +1,6 @@
+import 'package:chat_app/widgets/chat/messages.dart';
+import 'package:chat_app/widgets/chat/new_message.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -9,34 +12,49 @@ class ChatScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat App'),
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('chats/Il3lUzD4MX3rMrVEvlG7/messages')
-            .snapshots(),
-        builder: (ctx, streamSnapshot) {
-          if (streamSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          final doc = streamSnapshot.data!.docs;
-          return ListView.builder(
-            itemCount: doc.length,
-            itemBuilder: (ctx, index) => Container(
-              padding: const EdgeInsets.all(8),
-              child: Text(doc[index]['text']),
+        actions: [
+          DropdownButton(
+            elevation: 0,
+            icon: const Icon(
+              Icons.more_vert,
+              color: Colors.white,
             ),
-          );
-        },
+            items: [
+              DropdownMenuItem(
+                child: SizedBox(
+                  child: Row(
+                    children: const [
+                      Icon(
+                        Icons.exit_to_app,
+                        color: Colors.black,
+                      ),
+                      SizedBox(
+                        width: 8,
+                      ),
+                      Text('Logout'),
+                    ],
+                  ),
+                ),
+                value: 'logout',
+              ),
+            ],
+            onChanged: (itemIdentifier) {
+              if (itemIdentifier == 'logout') {
+                FirebaseAuth.instance.signOut();
+              }
+            },
+          )
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          FirebaseFirestore.instance
-              .collection('chats/Il3lUzD4MX3rMrVEvlG7/messages')
-              .add({'text': 'How are you!'});
-        },
-        child: const Icon(Icons.add),
+      body: SizedBox(
+        child: Column(
+          children: const [
+            Expanded(
+              child: Messages(),
+            ),
+            SafeArea(child: NewMessage()),
+          ],
+        ),
       ),
     );
   }
