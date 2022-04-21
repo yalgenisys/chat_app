@@ -39,6 +39,8 @@ dependencies:
   firebase_auth: ^3.3.14
   image_picker: ^0.8.5
   firebase_storage: ^10.2.12
+  firebase_messaging: ^11.2.13
+  shared_preferences: ^2.0.13
 
 dev_dependencies:
   flutter_test:
